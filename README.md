@@ -1,2 +1,2 @@
 # SalesPredictionCarleton
-Seconf term project on sales prediction using streamlit
+Seconf term project on sales prediction using streamlit python library
