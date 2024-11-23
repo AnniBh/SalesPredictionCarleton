@@ -3,3 +3,7 @@ matplotlib
 numpy
 pandas
 datetime
+io
+time
+prophet
+plotly
