@@ -6,3 +6,4 @@ datetime
 prophet
 plotly
 fpdf
+calendar

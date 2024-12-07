@@ -9,6 +9,10 @@ import time as time
 import io
 from fpdf import FPDF
 import os
+import calendar
+
+# Set page configuration to wide mode
+st.set_page_config(layout="wide", page_title="Sales Dashboard Chaitime", page_icon="📊")
 
 # Load the data
 data = pd.read_csv("Updated_Sales_Data.csv")
@@ -17,6 +21,8 @@ data = pd.read_csv("Updated_Sales_Data.csv")
 data["Date"] = pd.to_datetime(data["Date"])
 data["Year"] = data["Date"].dt.year
 data["Year-Month"] = data["Date"].dt.to_period("M")
+data["Month"] = data["Date"].dt.month  # Ensure this column is created
+data["Month Name"] = data["Month"].apply(lambda x: calendar.month_name[x])
 
 # Initialize session state for charts
 if "dashboard_charts" not in st.session_state:
@@ -88,7 +94,7 @@ page = st.sidebar.radio("Go to", ["Dashboard", "Enhanced Predictions", "Generate
 
 if page == "Dashboard":
     # Main Dashboard Logic
-    st.title("Sales Dashboard")
+    st.title("Sales Dashboard for Chaitime Carleton University Store")
 
     # Sidebar Filters
     st.sidebar.header("Filters")
@@ -153,83 +159,125 @@ if page == "Dashboard":
     unique_items = filtered_data["Item Name"].nunique()
     total_revenue = filtered_data["Price"].sum()
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns([1, 1, 1])
     col1.metric("Total Sales", total_sales)
     col2.metric("Unique Items Sold", unique_items)
     col3.metric("Total Revenue ($)", f"${total_revenue:,.2f}")
 
-    # Sales by Category
-    st.header("Sales by Category")
-    sales_by_category = filtered_data["Category"].value_counts()
+    # Sales Insights Section with 3 Columns
+    st.header("Sales Insights")
+    col1, col2, col3 = st.columns([1, 1, 1])  # Define three equal-width columns
 
-    if sales_by_category.empty:
-        st.warning("No data available for the selected filters.")
-    else:
-        fig, ax = plt.subplots()
-        sales_by_category.plot(kind="bar", ax=ax, color="skyblue")
-        ax.set_title("Sales by Category")
-        ax.set_ylabel("Number of Sales")
-        ax.set_xlabel("Category")
-        st.pyplot(fig)
+    with col1:
+        st.subheader("Sales by Category")
+        sales_by_category = filtered_data["Category"].value_counts()
+        if sales_by_category.empty:
+            st.warning("No data available for the selected filters.")
+        else:
+            fig, ax = plt.subplots(figsize=(6, 4))  # Uniform figure size
+            sales_by_category.plot(kind="bar", ax=ax, color="skyblue")
+            ax.set_title("Sales by Category")
+            ax.set_ylabel("Number of Sales")
+            ax.set_xlabel("Category")
+            st.pyplot(fig)
+            dashboard_components_path_1 = save_chart_to_file(fig,"sales_by_category.png")
 
-        dashboard_components_path_1 = save_chart_to_file(fig,"sales_by_category.png")
+    with col2:
+        st.subheader("Sales by Item")
+        sales_by_item = filtered_data["Item Name"].value_counts()
+        if sales_by_item.empty:
+            st.warning("No data available for the selected filters.")
+        else:
+            fig, ax = plt.subplots(figsize=(6, 10))  # Uniform figure size
+            sales_by_item.plot(kind="barh", ax=ax, color="lightgreen")
+            ax.set_title("Sales by Item")
+            ax.set_xlabel("Number of Sales")
+            ax.set_ylabel("Item Name")
+            st.pyplot(fig)
+            dashboard_components_path_2 = save_chart_to_file(fig,"sales_by_item.png")
 
-    # Sales by Item
-    st.header("Sales by Item")
-    sales_by_item = filtered_data["Item Name"].value_counts()
+    with col3:
+        st.subheader("Sales by Age Group")
 
-    if sales_by_item.empty:
-        st.warning("No data available for the selected filters.")
-    else:
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sales_by_item.plot(kind="barh", ax=ax, color="lightgreen")
-        ax.set_title("Sales by Item")
-        ax.set_xlabel("Number of Sales")
-        ax.set_ylabel("Item Name")
-        st.pyplot(fig)
+        # Define age groups
+        age_bins = [0, 18, 30, 40, 50, np.inf]
+        age_labels = ["Under 18", "18-30", "30-40", "40-50", "Above 50"]
 
-        dashboard_components_path_2 = save_chart_to_file(fig,"sales_by_item.png")
+        # Add a new column for age groups in the filtered data
+        filtered_data["Age Group"] = pd.cut(
+            filtered_data["Customer Age"], bins=age_bins, labels=age_labels, right=False
+        )
 
-    # Monthly Sales Line Chart
-    st.header("Monthly Sales")
-    monthly_sales = filtered_data.groupby("Year-Month").size()
+        # Calculate sales by age group
+        sales_by_age_group = filtered_data["Age Group"].value_counts().sort_index()
 
-    if monthly_sales.empty:
-        st.warning("No data available for the selected filters.")
-    else:
-        fig, ax = plt.subplots()
-        monthly_sales.plot(kind="line", ax=ax, marker="o", color="purple")
-        ax.set_title("Monthly Sales Trend")
-        ax.set_ylabel("Number of Sales")
-        ax.set_xlabel("Month")
-        ax.grid(True, linestyle="--", alpha=0.6)
-        st.pyplot(fig)
-    
-        dashboard_components_path_3 = save_chart_to_file(fig,"monthly_sales_trend.png")
+        if sales_by_age_group.empty:
+            st.warning("No data available for the selected filters.")
+        else:
+            fig, ax = plt.subplots(figsize=(6, 5))  # Uniform figure size
+            sales_by_age_group.plot(kind="bar", ax=ax, color="coral")
+            ax.set_title("Sales by Age Group")
+            ax.set_ylabel("Number of Sales")
+            ax.set_xlabel("Age Group")
+            st.pyplot(fig)
+            dashboard_components_path_3 = save_chart_to_file(fig,"sales_by_age group.png")
 
-    # Average Calories per Category
-    st.header("Average Calories per Category")
-    calories_by_category = filtered_data.groupby("Category")["Calories"].mean()
 
-    if calories_by_category.empty:
-        st.warning("No data available for the selected filters.")
-    else:
-        fig, ax = plt.subplots()
-        calories_by_category.plot(kind="bar", ax=ax, color="orange")
-        ax.set_title("Average Calories per Category")
-        ax.set_ylabel("Average Calories")
-        ax.set_xlabel("Category")
-        st.pyplot(fig)
-    
-        dashboard_components_path_4 = save_chart_to_file(fig,"avg_calories_per_category.png")
+    # Grid for Monthly Sales and Average Calories per Category
+    st.header("Trend Analysis")
+    col1, col2, col3 = st.columns([1, 1, 1])
+
+    with col1:
+        st.subheader("Monthly Sales")
+        monthly_sales = filtered_data.groupby("Year-Month").size()
+        if monthly_sales.empty:
+            st.warning("No data available for the selected filters.")
+        else:
+            fig, ax = plt.subplots(figsize=(6, 6))  # Set uniform figure size
+            monthly_sales.plot(kind="line", ax=ax, marker="o", color="purple")
+            ax.set_title("Monthly Sales Trend")
+            ax.set_ylabel("Number of Sales")
+            ax.set_xlabel("Month")
+            ax.grid(True, linestyle="--", alpha=0.6)
+            st.pyplot(fig)
+            dashboard_components_path_4 = save_chart_to_file(fig,"monthly_sales.png")
+
+    with col2:
+        st.subheader("Average Calories per Category")
+        calories_by_category = filtered_data.groupby("Category")["Calories"].mean()
+        if calories_by_category.empty:
+            st.warning("No data available for the selected filters.")
+        else:
+            fig, ax = plt.subplots(figsize=(6, 4))  # Set uniform figure size
+            calories_by_category.plot(kind="bar", ax=ax, color="orange")
+            ax.set_title("Average Calories per Category")
+            ax.set_ylabel("Average Calories")
+            ax.set_xlabel("Category")
+            st.pyplot(fig)
+            dashboard_components_path_5 = save_chart_to_file(fig,"avg_calories_per_category.png")
+
+    with col3:
+        monthly_sales = data.groupby(["Year", "Month", "Month Name", "Item Name"]).agg({"Price": "sum"}).reset_index()
+
+        # Find the best-selling item for each month
+        best_selling_items = monthly_sales.loc[monthly_sales.groupby(["Year", "Month"])["Price"].idxmax()]
+
+        # Sort by Year and Month to ensure chronological order
+        best_selling_items = best_selling_items.sort_values(["Year", "Month"]).drop(columns=["Month"])
+
+        # Display the table in Streamlit
+        st.subheader("Best-Selling Items Month-Wise")
+        st.table(best_selling_items.reset_index(drop=True))
 
     # Store paths for report generation
     st.session_state.dashboard_charts = [
         dashboard_components_path_1,
         dashboard_components_path_2,
         dashboard_components_path_3,
-        dashboard_components_path_4
+        dashboard_components_path_4,
+        dashboard_components_path_5
     ]
+
     # Raw Data
     st.header(f"Raw Data for {year_filter}")
     st.dataframe(filtered_data)
@@ -313,7 +361,7 @@ elif page == "Enhanced Predictions":
     # Predictions Forecast Plot
     st.header("Forecast based on academic schedule and temperature")
     fig2 = model.plot(forecast)
-    st.pyplot(fig2)
+    st.plotly_chart(fig2)
 
     # Save chart for PDF
     prophet_forecast_path = save_prophet_plot_to_file(fig2, "prophet_forecast_plot.png")
