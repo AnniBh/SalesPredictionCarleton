@@ -297,15 +297,13 @@ elif page == "Enhanced Predictions":
 
     # Aggregate data for the selected item
     item_sales = data[data["Item Name"] == selected_item]
-    daily_sales = item_sales.groupby("Date").agg({"Price": "sum"}).reset_index()
+    daily_sales = item_sales.groupby("Date").agg({"Price": "sum", "Temperature": "mean"}).reset_index()
     # Add Regressors: Simulate Academic Schedules and Weather Conditions
-    daily_sales["academic_schedule"] = np.where(daily_sales["Date"].dt.month.isin([9, 10, 11, 1, 2, 3]), 1, 0)
-    daily_sales["temperature"] = 20 + 10 * np.sin(2 * np.pi * daily_sales["Date"].dt.month / 12)
+    daily_sales["academic_schedule"] = np.where(daily_sales["Date"].dt.month.isin([9, 10, 11, 12, 1, 2, 3, 4]), 1, 0)
 
     # Prepare data for Prophet
-    df_prophet = daily_sales.rename(columns={"Date": "ds", "Price": "y"})
+    df_prophet = daily_sales.rename(columns={"Date": "ds", "Price": "y", "Temperature": "temperature"})
     df_prophet["academic_schedule"] = daily_sales["academic_schedule"]
-    df_prophet["temperature"] = daily_sales["temperature"]
 
     # Initialize and fit the Prophet model with regressors
     st.write(f"Training the model for '{selected_item}'...")
@@ -316,8 +314,9 @@ elif page == "Enhanced Predictions":
 
     # Extend the forecast into the future
     future = model.make_future_dataframe(periods=forecast_horizon)
-    future["academic_schedule"] = np.where(future["ds"].dt.month.isin([9, 10, 11, 1, 2, 3]), 1, 0)
-    future["temperature"] = 20 + 10 * np.sin(2 * np.pi * future["ds"].dt.month / 12)
+    future["academic_schedule"] = np.where(future["ds"].dt.month.isin([9, 10, 11, 12, 1, 2, 3, 4]), 1, 0)
+    last_known_temp = daily_sales["Temperature"].iloc[-1]
+    future["temperature"] = last_known_temp
     forecast = model.predict(future)
 
     # Display Trends and Seasonality
@@ -330,15 +329,22 @@ elif page == "Enhanced Predictions":
 
     # Aggregate category data
     category_sales = data[data["Category"] == selected_category]
-    daily_category_sales = category_sales.groupby("Date").agg({"Price": "sum"}).reset_index()
+    daily_category_sales = category_sales.groupby("Date").agg({"Price": "sum", "Temperature": "mean"}).reset_index()
+    daily_category_sales["academic_schedule"] = np.where(daily_category_sales["Date"].dt.month.isin([9, 10, 11, 12, 1, 2, 3, 4]), 1, 0)
 
     # Prepare data for Prophet
-    df_category = daily_category_sales.rename(columns={"Date": "ds", "Price": "y"})
+    df_category = daily_category_sales.rename(columns={"Date": "ds", "Price": "y", "Temperature": "temperature"})
+    df_category["academic_schedule"] = daily_category_sales["academic_schedule"]
     category_model = Prophet()
+    category_model.add_regressor("academic_schedule")
+    category_model.add_regressor("temperature")
     category_model.fit(df_category)
 
     # Forecast category trends
-    category_future = category_model.make_future_dataframe(periods=30)
+    category_future = category_model.make_future_dataframe(periods=forecast_horizon)
+    category_future["academic_schedule"] = np.where(category_future["ds"].dt.month.isin([9, 10, 11, 12, 1, 2, 3, 4]), 1, 0)
+    last_known_temp = daily_category_sales["Temperature"].iloc[-1]
+    category_future["temperature"] = last_known_temp
     category_forecast = category_model.predict(category_future)
 
     # Plot category trends
