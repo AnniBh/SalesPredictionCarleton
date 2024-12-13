@@ -210,8 +210,10 @@ if page == "Dashboard":
 
         # Calculate sales by age group
         sales_by_age_group = filtered_data["Age Group"].value_counts().sort_index()
+        sales_by_item = filtered_data["Item Name"].value_counts()
+        sales_by_category = filtered_data["Category"].value_counts()
 
-        if sales_by_age_group.empty:
+        if sales_by_item.empty or sales_by_category.empty or sales_by_age_group.empty:
             st.warning("No data available for the selected filters.")
         else:
             fig, ax = plt.subplots(figsize=(6, 5))  # Uniform figure size
@@ -306,7 +308,7 @@ elif page == "Enhanced Predictions":
     df_prophet["academic_schedule"] = daily_sales["academic_schedule"]
 
     # Initialize and fit the Prophet model with regressors
-    st.write(f"Training the model for '{selected_item}'...")
+    st.write(f"Training the model...")
     model = Prophet()
     model.add_regressor("academic_schedule")
     model.add_regressor("temperature")
@@ -320,7 +322,7 @@ elif page == "Enhanced Predictions":
     forecast = model.predict(future)
 
     # Display Trends and Seasonality
-    st.write(f"Forecast Components for '{selected_item}':")
+    st.header(f"Trends for '{selected_item}' item")
     fig = plot_components_plotly(model, forecast)
     st.plotly_chart(fig)
 
@@ -361,7 +363,7 @@ elif page == "Enhanced Predictions":
     prophet_components_path = save_prophet_plot_to_file(fig1, "prophet_forecast_components.png")
 
     # Display Forecasted Data
-    st.write("Forecasted Data based on academic schedule and temperature:")
+    st.header("Forecasted Data based on academic schedule and temperature:")
     st.dataframe(forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]])
 
     # Predictions Forecast Plot
