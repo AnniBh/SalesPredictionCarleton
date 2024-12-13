@@ -120,8 +120,8 @@ if page == "Dashboard":
     # Item filter
     item_filter = st.sidebar.multiselect(
         "Select Items:",
-        options=filtered_data_by_year["Item Name"].unique(),
-        default=filtered_data_by_year["Item Name"].unique()
+        options=filtered_data_by_year[filtered_data_by_year["Category"].isin(category_filter)]["Item Name"].unique(),
+        default=filtered_data_by_year[filtered_data_by_year["Category"].isin(category_filter)]["Item Name"].unique()
     )
 
     # Apply all filters
