@@ -170,6 +170,7 @@ if page == "Dashboard":
 
     with col1:
         st.subheader("Sales by Category")
+        dashboard_components_path_1 = None  # Initialize the path to None
         sales_by_category = filtered_data["Category"].value_counts()
         if sales_by_category.empty:
             st.warning("No data available for the selected filters.")
@@ -184,6 +185,7 @@ if page == "Dashboard":
 
     with col2:
         st.subheader("Sales by Item")
+        dashboard_components_path_2 = None  # Initialize the path to None
         sales_by_item = filtered_data["Item Name"].value_counts()
         if sales_by_item.empty:
             st.warning("No data available for the selected filters.")
@@ -198,6 +200,7 @@ if page == "Dashboard":
 
     with col3:
         st.subheader("Sales by Age Group")
+        dashboard_components_path_3 = None  # Initialize the path to None
 
         # Define age groups
         age_bins = [0, 18, 30, 40, 50, np.inf]
@@ -231,6 +234,7 @@ if page == "Dashboard":
 
     with col1:
         st.subheader("Monthly Sales")
+        dashboard_components_path_4 = None  # Initialize the path to None
         monthly_sales = filtered_data.groupby("Year-Month").size()
         if monthly_sales.empty:
             st.warning("No data available for the selected filters.")
@@ -246,6 +250,7 @@ if page == "Dashboard":
 
     with col2:
         st.subheader("Average Calories per Category")
+        dashboard_components_path_5 = None  # Initialize the path to None
         calories_by_category = filtered_data.groupby("Category")["Calories"].mean()
         if calories_by_category.empty:
             st.warning("No data available for the selected filters.")
