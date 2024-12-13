@@ -292,7 +292,12 @@ if page == "Dashboard":
 
     # Raw Data
     st.header(f"Raw Data for {year_filter}")
-    st.dataframe(filtered_data)
+    sales_by_item = filtered_data["Item Name"].value_counts()
+    sales_by_category = filtered_data["Category"].value_counts()
+    if sales_by_item.empty or sales_by_category.empty:
+        st.warning("Select appropriate item and category to see the data.")
+    else:
+        st.dataframe(filtered_data)
 
 elif page == "Enhanced Predictions":
     st.title("Enhanced Predictions")
