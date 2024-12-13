@@ -271,10 +271,15 @@ if page == "Dashboard":
 
         # Sort by Year and Month to ensure chronological order
         best_selling_items = best_selling_items.sort_values(["Year", "Month"]).drop(columns=["Month"])
+        sales_by_item = filtered_data["Item Name"].value_counts()
+        sales_by_category = filtered_data["Category"].value_counts()
 
         # Display the table in Streamlit
         st.subheader("Best-Selling Items Month-Wise")
-        st.table(best_selling_items.reset_index(drop=True))
+        if sales_by_item.empty or sales_by_category.empty:
+            st.warning("No data available for the selected filters.")
+        else:
+            st.table(best_selling_items.reset_index(drop=True))
 
     # Store paths for report generation
     st.session_state.dashboard_charts = [
