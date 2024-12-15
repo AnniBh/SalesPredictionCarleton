@@ -12,7 +12,7 @@ import os
 import calendar
 
 # Set page configuration to wide mode
-st.set_page_config(layout="wide", page_title="Sales Dashboard Chaitime", page_icon="📊")
+st.set_page_config(layout="wide", page_title="Sales Dashboard Chatime", page_icon="📊")
 
 # Load the data
 data = pd.read_csv("Updated_Sales_Data.csv")
